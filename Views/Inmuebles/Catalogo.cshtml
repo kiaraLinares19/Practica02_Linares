@@ -1,0 +1,103 @@
+@using Practica2.Models
+@model List<Inmueble>
+
+@{
+    // 💡 PASO CLAVE: Hacemos un CAST explícito del objeto guardado en ViewData
+    // Esto es lo que le dice al compilador de Razor que "Filtros" es un FiltroInmueblesViewModel,
+    // eliminando así el código rojo y habilitando la validación.
+    var FiltrosModel = (FiltroInmueblesViewModel)ViewData["Filtros"];
+}
+
+<h2>Venta de Inmuebles Activos</h2>
+
+@* Validación Summary: Muestra mensajes de error claros (coherencia de rangos, no negativos) *@
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<div class="row">
+    @* Formulario de Filtros *@
+    <div class="col-md-3">
+        <h3>Filtros </h3>
+        @* Usa el método GET para los filtros, y así mantenerlos en la URL *@
+        <form method="get" asp-action="Catalogo">
+            
+            <div class="form-group">
+                @* Usamos la variable local @FiltrosModel *@
+                <label asp-for="@FiltrosModel.Ciudad">Ciudad</label>
+                <input asp-for="@FiltrosModel.Ciudad" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="@FiltrosModel.Tipo">Tipo</label>
+                <select asp-for="@FiltrosModel.Tipo" class="form-control" asp-items="Html.GetEnumSelectList<TipoInmueble>()">
+                    <option value="">Cualquier Tipo</option>
+                </select>
+            </div>
+
+            <h4>Rango de Precios</h4>
+            <div class="form-group">
+                <label asp-for="@FiltrosModel.PrecioMin">Precio Mínimo</label>
+                <input asp-for="@FiltrosModel.PrecioMin" class="form-control" />
+                <span asp-validation-for="@FiltrosModel.PrecioMin" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="@FiltrosModel.PrecioMax">Precio Máximo</label>
+                <input asp-for="@FiltrosModel.PrecioMax" class="form-control" />
+                <span asp-validation-for="@FiltrosModel.PrecioMax" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="@FiltrosModel.Dormitorios">Dormitorios (>=)</label>
+                <input asp-for="@FiltrosModel.Dormitorios" class="form-control" />
+                <span asp-validation-for="@FiltrosModel.Dormitorios" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Aplicar Filtros</button>
+        </form>
+    </div>
+
+    @* Listado de Inmuebles *@
+    <div class="col-md-9">
+        <div class="row">
+            @foreach (var inmueble in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        {{-- Asume que tienes un campo Imagen en tu modelo Inmueble --}}
+                        <img src="/images/@inmueble.Imagen" class="card-img-top" alt="@inmueble.Titulo">
+                        <div class="card-body">
+                            <h5 class="card-title">@inmueble.Titulo</h5>
+                            <p class="card-text">@inmueble.Ciudad | @inmueble.Tipo</p>
+                            <p class="card-text">**@inmueble.Precio.ToString("C0")**</p>
+                            <a asp-action="Detalle" asp-route-id="@inmueble.Id" class="btn btn-sm btn-info">Ver Detalle</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Paginación *@
+        @{
+            var currentPage = (int)ViewBag.CurrentPage;
+            var totalPages = (int)ViewBag.TotalPages;
+        }
+        <nav aria-label="Paginación">
+            <ul class="pagination">
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" 
+                           asp-action="Catalogo" 
+                           asp-route-pagina="@i"
+                           @* CRÍTICO: Pasamos los filtros actuales en la URL para mantener el estado *@
+                           asp-route-ciudad="@FiltrosModel.Ciudad"
+                           asp-route-tipo="@FiltrosModel.Tipo"
+                           asp-route-precioMin="@FiltrosModel.PrecioMin"
+                           asp-route-precioMax="@FiltrosModel.PrecioMax"
+                           asp-route-dormitorios="@FiltrosModel.Dormitorios">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    </div>
+</div>
