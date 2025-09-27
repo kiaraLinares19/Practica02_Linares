@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Practica2.Data;
 using Practica2.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace Practica2.Controllers
 {
@@ -17,12 +18,12 @@ namespace Practica2.Controllers
         }
 
 
+        
         public async Task<IActionResult> Catalogo([FromQuery] FiltroInmueblesViewModel filtros, int pagina = 1)
         {
-
+           
             if (!ModelState.IsValid)
             {
-
                 ViewBag.CurrentPage = pagina;
                 ViewBag.TotalPages = 1;
                 ViewData["Filtros"] = filtros;
@@ -34,7 +35,7 @@ namespace Practica2.Controllers
                                     .Where(i => i.Activo)
                                     .AsQueryable();
 
-            // Aplicar filtros basados en el ViewModel
+          
             if (!string.IsNullOrEmpty(filtros.Ciudad))
             {
                 inmuebles = inmuebles.Where(i => i.Ciudad == filtros.Ciudad);
@@ -57,7 +58,6 @@ namespace Practica2.Controllers
 
             if (filtros.Dormitorios.HasValue)
             {
-
                 inmuebles = inmuebles.Where(i => i.Dormitorios >= filtros.Dormitorios.Value);
             }
 
@@ -69,10 +69,10 @@ namespace Practica2.Controllers
 
 
             var listaPaginada = await inmuebles
-                                    .OrderBy(i => i.Precio)
-                                    .Skip((pagina - 1) * pageSize)
-                                    .Take(pageSize)
-                                    .ToListAsync();
+                                        .OrderBy(i => i.Precio)
+                                        .Skip((pagina - 1) * pageSize)
+                                        .Take(pageSize)
+                                        .ToListAsync();
 
 
             ViewBag.CurrentPage = pagina;
@@ -84,14 +84,17 @@ namespace Practica2.Controllers
             return View(listaPaginada);
         }
         
+        
+       
         public async Task<IActionResult> Detalle(int id)
         {
             var inmueble = await _context.Inmuebles.FirstOrDefaultAsync(m => m.Id == id);
             if (inmueble == null) return NotFound();
 
-            [cite_start]
+           
             var reservaActiva = await _context.Reservas
                 .FirstOrDefaultAsync(r => r.InmuebleId == id && r.FechaExpiracion > DateTime.Now);
+
 
             ViewBag.ReservaActiva = reservaActiva != null;
             ViewBag.FechaExpiracion = reservaActiva?.FechaExpiracion;
