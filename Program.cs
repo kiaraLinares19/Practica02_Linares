@@ -47,17 +47,32 @@ else
     builder.Services.AddSession();
 }
 
-
-
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var serviceProvider = scope.ServiceProvider;
+    try
+    {
+        await Practica2.Data.IdentitySeeder.SeedRolesAsync(serviceProvider);
+    }
+    catch (Exception ex)
+    {
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the identity roles and users.");
+    }
+}
 
 
 app.UseRouting();
 
-app.UseSession(); 
+app.UseSession();
 
 
 app.UseAuthorization();
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
