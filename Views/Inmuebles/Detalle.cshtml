@@ -1,30 +1,100 @@
 @using Practica2.Models
 @model Inmueble
 
+@{
+    ViewData["Title"] = @Model.Titulo;
+   
+    var reservaActiva = (bool)ViewBag.ReservaActiva;
+    var fechaExpiracion = (DateTime?)ViewBag.FechaExpiracion;
+}
+
 <h2>@Model.Titulo</h2>
-<p class="lead">@Model.Tipo en @Model.Ciudad</p>
+<p class="text-secondary">Código: @Model.Codigo | @Model.Ciudad</p>
+
+@* --- Feedback de Reserva/Visita (Pregunta 3) --- *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success mt-3">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger mt-3">@TempData["ErrorMessage"]</div>
+}
+
 
 <div class="row">
-    <div class="col-md-6">
-        <img src="/images/@Model.Imagen" class="img-fluid" alt="@Model.Titulo">
+    <div class="col-md-7">
+        {{-- Asume que tienes un campo Imagen en tu modelo Inmueble --}}
+        <img src="/images/@Model.Imagen" class="img-fluid rounded shadow" alt="@Model.Titulo" />
+
+        <h4 class="mt-4">Descripción y Detalles</h4>
+        <dl class="row">
+            <dt class="col-sm-4">Tipo:</dt>
+            <dd class="col-sm-8">@Model.Tipo</dd>
+
+            <dt class="col-sm-4">Dirección:</dt>
+            <dd class="col-sm-8">@Model.Direccion</dd>
+
+            <dt class="col-sm-4">Dormitorios:</dt>
+            <dd class="col-sm-8">@Model.Dormitorios</dd>
+
+            <dt class="col-sm-4">Baños:</dt>
+            <dd class="col-sm-8">@Model.Banos</dd>
+
+            <dt class="col-sm-4">Metros Cuadrados:</dt>
+            <dd class="col-sm-8">@Model.MetrosCuadrados.ToString("N0") m²</dd>
+        </dl>
     </div>
-    <div class="col-md-6">
-        <h3>Detalles</h3>
-        <ul class="list-unstyled">
-            <li>**Precio:** @Model.Precio.ToString("C0")</li>
-            <li>**Dirección:** @Model.Direccion</li>
-            <li>**Metros Cuadrados:** @Model.MetrosCuadrados m²</li>
-            <li>**Dormitorios:** @Model.Dormitorios</li>
-            <li>**Baños:** @Model.Banos</li>
-        </ul>
 
-        @* Requerido: Botón "Agendar visita" *@
-        <a asp-controller="Visitas" asp-action="Agendar" asp-route-inmuebleId="@Model.Id" class="btn btn-success mt-3">Agendar visita</a>
+    <div class="col-md-5">
+        <div class="card bg-light shadow-sm p-4">
+            <h3 class="text-primary">Precio: @Model.Precio.ToString("C0")</h3>
+            <hr />
+
+            <h4 class="mb-3">Opciones de Cliente</h4>
+
         
-        @* Aquí se incluirá la lógica de Reserva de la Pregunta 3 *@
-        <button class="btn btn-danger mt-3" disabled>Reservar ahora (Se habilita en P3)</button>
+            @if (User.Identity.IsAuthenticated)
+            {
+                
+                <a asp-controller="Visitas" asp-action="Agendar" asp-route-inmuebleId="@Model.Id" class="btn btn-success btn-lg mb-3">
+                    Agendar Visita
+                </a>
 
-        <hr />
-        <a asp-action="Catalogo" class="btn btn-outline-secondary">Volver al Catálogo</a>
+          
+                @if (reservaActiva)
+                {
+              
+                    <div class="alert alert-warning">
+                        Este inmueble está **RESERVADO** por un cliente. <br />
+                        Bloqueo activo hasta: **@fechaExpiracion?.ToString("G")**.
+                    </div>
+                }
+                else
+                {
+         
+                    <form asp-controller="Visitas" asp-action="Reservar" method="post">
+                        <input type="hidden" name="inmuebleId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-danger btn-lg w-100" asp-antiforgery="true">
+                            Reservar ahora (Bloqueo 48h)
+                        </button>
+                    </form>
+                }
+            }
+            else
+            {
+        
+                <p class="text-danger mt-3 text-center">Debes <a asp-area="Identity" asp-page="/Account/Login">iniciar sesión</a> para agendar visitas o reservar[cite: 45].</p>
+            }
+
+        </div>
     </div>
 </div>
+
+<div class="mt-5">
+    <a asp-action="Catalogo" class="btn btn-secondary">← Volver al Catálogo</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
