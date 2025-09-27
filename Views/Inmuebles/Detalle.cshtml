@@ -1,0 +1,30 @@
+@using Practica2.Models
+@model Inmueble
+
+<h2>@Model.Titulo</h2>
+<p class="lead">@Model.Tipo en @Model.Ciudad</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <img src="/images/@Model.Imagen" class="img-fluid" alt="@Model.Titulo">
+    </div>
+    <div class="col-md-6">
+        <h3>Detalles</h3>
+        <ul class="list-unstyled">
+            <li>**Precio:** @Model.Precio.ToString("C0")</li>
+            <li>**Dirección:** @Model.Direccion</li>
+            <li>**Metros Cuadrados:** @Model.MetrosCuadrados m²</li>
+            <li>**Dormitorios:** @Model.Dormitorios</li>
+            <li>**Baños:** @Model.Banos</li>
+        </ul>
+
+        @* Requerido: Botón "Agendar visita" *@
+        <a asp-controller="Visitas" asp-action="Agendar" asp-route-inmuebleId="@Model.Id" class="btn btn-success mt-3">Agendar visita</a>
+        
+        @* Aquí se incluirá la lógica de Reserva de la Pregunta 3 *@
+        <button class="btn btn-danger mt-3" disabled>Reservar ahora (Se habilita en P3)</button>
+
+        <hr />
+        <a asp-action="Catalogo" class="btn btn-outline-secondary">Volver al Catálogo</a>
+    </div>
+</div>
